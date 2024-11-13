@@ -2,8 +2,12 @@ import React, { useState } from 'react'
 import { ContributionBadge } from './components/contribution-badge'
 import { Button } from './components/ui/button'
 import { Card, CardContent } from './components/ui/card'
-import { getAddress, getName } from '@coinbase/onchainkit/identity'
+import { Basename, getAddress, getName } from '@coinbase/onchainkit/identity'
 import { base } from 'viem/chains'
+import { AppProviders } from './providers'
+import { namehash, normalize } from 'viem/ens'
+import { createPublicClient, http } from 'viem'
+import L2ResolverAbi from './L2ResolverAbi'
 
 function App() {
   const [input, setInput] = useState('')
@@ -29,8 +33,31 @@ function App() {
       
       // If input is a .base.eth name, resolve the address first
       if (input.endsWith('.base.eth')) {
-        walletAddress = (await getAddress({ name: input, chain: base })) as `0x${string}`
-        console.log('Resolved .base.eth address:', walletAddress)
+        console.log('Input is a .base.eth name, creating public client...')
+        let client = createPublicClient({
+          chain: base,
+          transport: http(),
+        });
+        console.log('Normalizing and hashing input name...')
+        const nameHash = namehash(normalize(input));
+        console.log('Name hash:', nameHash)
+        try {
+          console.log('Attempting to resolve name using L2 resolver contract...')
+          const basename = await client.readContract({
+            abi: L2ResolverAbi,
+            address: "0xC6d566A56A1aFf6508b41f6c90ff131615583BCD",
+            functionName: 'addr',
+            args: [nameHash],
+          });
+          console.log('L2 resolver response:', basename)
+          if (basename) {
+            console.log('Successfully resolved name through L2 resolver')
+            walletAddress = basename as `0x${string}`
+          }
+        } catch (_error) {
+          console.error('Error resolving .base.eth name:', _error)
+          // This is a best effort attempt, so we don't need to do anything here.
+        }
       }
 
       // Get wallet stats from Moralis
@@ -73,6 +100,7 @@ function App() {
       })
       console.log('Stats updated successfully')
     } catch (error) {
+      console.log(error);
       console.error('Error fetching stats:', error)
     } finally {
       setLoading(false)
@@ -81,6 +109,7 @@ function App() {
   }
 
   return (
+    <AppProviders>
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="flex flex-col items-center space-y-6">
         <h1 className="text-3xl font-bold text-[rgb(0,82,255)]">Contribution to 1B(ase)</h1>
@@ -115,6 +144,7 @@ function App() {
         )}
       </div>
     </div>
+    </AppProviders>
   )
 }
 
