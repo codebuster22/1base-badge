@@ -1,5 +1,3 @@
-import React from 'react'
-
 interface CircularProgressProps {
   transactions: number // Changed to match prop name from ContributionBadge
   color: string

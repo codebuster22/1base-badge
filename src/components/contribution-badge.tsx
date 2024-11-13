@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import { useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
 import { CircularProgress } from "./circular-progress"
@@ -6,7 +6,6 @@ import { Download, Share2 } from 'lucide-react'
 import html2canvas from 'html2canvas'
 
 interface ContributionBadgeProps {
-  percentage: number
   name: string
   totalTransactions: number
   totalVolume: number
@@ -40,7 +39,7 @@ export function ContributionBadge({
   }
 
   const handleShare = () => {
-    const tweetText = `Check out my 1B(ase) contribution! ${formattedTotalTransactions} transactions out of 1 Billion. Total volume: $${formattedTotalVolume}`
+    const tweetText = `Check out my 1B(ase) contribution! ${formattedTotalTransactions} transactions out of 1 Billion. Total volume: $${formattedTotalVolume}. Find yours here: https://1base.com`
     const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(tweetText)}`
     window.open(tweetUrl, '_blank')
   }
